@@ -157,3 +157,55 @@ static void LCD_ShowStatus(const char *line2) {
     LCD_Print(buf);
 }
 /*Azwad Nur Naveed*/
+/* ───────────────────── GPIO Outputs Configuration ───────────────────── */
+static void GPIO_Init(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+
+    /* PB12, PB13, PB14 LEDs – output push-pull 2 MHz */
+    GPIOB->CRH &= ~(0x000FFF00);
+    GPIOB->CRH |=  (0x00022200);
+
+    /* PA5 Buzzer – output push-pull 2 MHz */
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+    GPIOA->CRL &= ~(0x00F00000);
+    GPIOA->CRL |=  (0x00200000);
+
+    /* Turn off all LEDs and Buzzer on boot */
+    GPIOB->ODR &= ~((1 << 12) | (1 << 13) | (1 << 14));
+    GPIOA->ODR &= ~(1 << 5);
+}
+#define GREEN_LED_ON()   GPIOB->ODR |=  (1 << 12)
+#define GREEN_LED_OFF()  GPIOB->ODR &= ~(1 << 12)
+#define RED_LED_ON()     GPIOB->ODR |=  (1 << 13)
+#define RED_LED_OFF()    GPIOB->ODR &= ~(1 << 13)
+#define BLUE_LED_ON()    GPIOB->ODR |=  (1 << 14)
+#define BLUE_LED_OFF()   GPIOB->ODR &= ~(1 << 14)
+#define BUZZER_ON()      GPIOA->ODR |=  (1 << 5)
+#define BUZZER_OFF()     GPIOA->ODR &= ~(1 << 5)
+
+static void Beep(uint32_t on_ms, uint32_t off_ms, uint8_t times) {
+    for (uint8_t i = 0; i < times; i++) {
+        BUZZER_ON();
+        delay_ms(on_ms);
+        BUZZER_OFF();
+        delay_ms(off_ms);
+    }
+}
+static void Beep_Success(void) {
+    Beep(80,  60, 1);
+    Beep(120, 60, 1);
+    Beep(200, 0,  1);
+}
+
+static void Beep_Error(void) {
+    Beep(400, 100, 2);
+}
+
+static void Beep_Tick(void) {
+    Beep(20, 0, 1);
+}
+static void LEDs_Off(void) {
+    GREEN_LED_OFF();
+    RED_LED_OFF();
+    BLUE_LED_OFF();
+}
