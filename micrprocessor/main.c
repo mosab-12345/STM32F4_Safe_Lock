@@ -156,3 +156,4 @@ static void LCD_ShowStatus(const char *line2) {
     snprintf(buf, sizeof(buf), "%-16s", line2);
     LCD_Print(buf);
 }
+/*Azwad Nur Naveed*/
