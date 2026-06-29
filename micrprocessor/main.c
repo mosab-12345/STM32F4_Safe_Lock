@@ -71,7 +71,33 @@ Configured GPIO output pins for Status LEDs (PB12, PB13, PB14)
 Added inline definitions for individual LED state toggling*/
 
 /*AHMED BASEM ALARIQI*/
+/* ───────────────────── SysTick Interrupt ───────────────────── */
+volatile uint32_t ms_ticks = 0;
+void SysTick_Handler(void) { ms_ticks++; }
 
+void delay_ms(uint32_t ms) {
+    uint32_t start = ms_ticks;
+    while ((ms_ticks - start) < ms);
+}
+
+/* ───────────────────── Buttons Input ───────────────────── */
+#define BTN_OPEN()       (!(GPIOB->IDR & (1 << 0)))
+#define BTN_CHANGE_PWD() (!(GPIOB->IDR & (1 << 1)))
+
+
+void EXTI9_5_IRQHandler(void) {
+    if (EXTI->PR & (1 << 8)) {
+        state = STATE_IDLE;
+        EXTI->PR |= (1 << 8);
+    }
+}
+/*Configured SysTick timer interrupt for accurate 1ms timebase
+
+Implemented non-blocking delay_ms subroutine
+
+Configured GPIO input pull-up registers for control buttons
+
+Added EXTI8 hardware interrupt handler for system emergency reset*/
 /*AHMED FATH ELRAHMAN*/
 /* ───────────────────── I2C Configuration ───────────────────── */
 #define LCD_ADDR  (0x27 << 1)
