@@ -73,3 +73,86 @@ Added inline definitions for individual LED state toggling*/
 /*AHMED BASEM ALARIQI*/
 
 /*AHMED FATH ELRAHMAN*/
+/* ───────────────────── I2C Configuration ───────────────────── */
+#define LCD_ADDR  (0x27 << 1)
+#define LCD_RS    0x01
+#define LCD_EN    0x04
+#define LCD_BL    0x08
+
+static void I2C1_Init(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
+
+    /* PB6 SCL, PB7 SDA – alternate function open-drain */
+    GPIOB->CRL &= ~(0xFF000000);
+    GPIOB->CRL |=  (0xFF000000); /* AF OD, 50 MHz */
+
+    I2C1->CR1 = I2C_CR1_SWRST;
+    I2C1->CR1 = 0;
+    I2C1->CR2 = 36;           /* APB1 = 36 MHz */
+    I2C1->CCR = 180;          /* 100 kHz */
+    I2C1->TRISE = 37;
+    I2C1->CR1 |= I2C_CR1_PE;
+}
+
+static void I2C_WriteByte(uint8_t addr, uint8_t data) {
+    while (I2C1->SR2 & I2C_SR2_BUSY);
+    I2C1->CR1 |= I2C_CR1_START;
+    while (!(I2C1->SR1 & I2C_SR1_SB));
+    I2C1->DR = addr;
+    while (!(I2C1->SR1 & I2C_SR1_ADDR));
+    (void)I2C1->SR2;
+    I2C1->DR = data;static void LCD_SendNibble(uint8_t nibble, uint8_t rs) {
+    uint8_t data = (nibble << 4) | LCD_BL | (rs ? LCD_RS : 0);
+    I2C_WriteByte(LCD_ADDR, data | LCD_EN);
+    delay_ms(1);
+    I2C_WriteByte(LCD_ADDR, data & ~LCD_EN);
+    delay_ms(1);
+}
+
+static void LCD_SendByte(uint8_t byte, uint8_t rs) {
+    LCD_SendNibble(byte >> 4, rs);
+    LCD_SendNibble(byte & 0x0F, rs);
+}
+
+static void LCD_Cmd(uint8_t cmd)  { LCD_SendByte(cmd,  0); }
+static void LCD_Data(uint8_t c)   { LCD_SendByte(c,    1); }
+
+static void LCD_Init(void) {
+    delay_ms(50);
+    LCD_SendNibble(0x03, 0); delay_ms(5);
+    LCD_SendNibble(0x03, 0); delay_ms(1);
+    LCD_SendNibble(0x03, 0); delay_ms(1);
+    LCD_SendNibble(0x02, 0);            
+    LCD_Cmd(0x28);                      
+    LCD_Cmd(0x0C);                      
+    LCD_Cmd(0x06);                      
+    LCD_Cmd(0x01);                      
+    delay_ms(2);
+}2C_SR1_BTF));
+    I2C1->CR1 |= I2C_CR1_STOP;
+}
+static void LCD_SetCursor(uint8_t row, uint8_t col) {
+    uint8_t addr = (row == 0) ? 0x80 : 0xC0;
+    LCD_Cmd(addr + col);
+}
+
+static void LCD_Print(const char *s) {
+    while (*s) LCD_Data((uint8_t)*s++);
+}
+
+static void LCD_Clear(void) { LCD_Cmd(0x01); delay_ms(2); }
+static void LCD_ShowValues(void) {
+    char buf[17];
+    LCD_SetCursor(0, 0);
+    snprintf(buf, sizeof(buf), "1:%2d 2:%2d 3:%2d  ",
+             pot_val[0], pot_val[1], pot_val[2]);
+    LCD_Print(buf);
+}
+
+static void LCD_ShowStatus(const char *line2) {
+    char buf[17];
+    LCD_SetCursor(1, 0);
+    snprintf(buf, sizeof(buf), "%-16s", line2);
+    LCD_Print(buf);
+}
