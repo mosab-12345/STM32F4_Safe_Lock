@@ -34,7 +34,41 @@ Added ADC_ToScale function to map values from 0-4095 to 0-10
 
 Implemented ReadPots subroutine to update active combo readings*/
 /* ───────────────────── Servo (TIM1 CH1, PA8) ───────────────────── */
+#define SERVO_0DEG   1800
+#define SERVO_180DEG 3600
 
+static void Servo_Init(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_TIM1EN;
+    GPIOA->CRH &= ~(0x0F);
+    GPIOA->CRH |=  0x0B;   /* AF PP, 50 MHz */
+
+    TIM1->PSC = 39;
+    TIM1->ARR = 36000 - 1;
+    TIM1->CCR1 = SERVO_0DEG;
+    TIM1->CCMR1 = (6 << 4) | TIM_CCMR1_OC1PE;
+    TIM1->CCER  = TIM_CCER_CC1E;
+    TIM1->BDTR  = TIM_BDTR_MOE;
+    TIM1->CR1   = TIM_CR1_CEN;
+}
+
+static void Servo_SetAngle(uint16_t angle) {
+    TIM1->CCR1 = (angle == 0) ? SERVO_0DEG : SERVO_180DEG;
+}
+
+/* ───────────────────── GPIO LEDs ───────────────────── */
+#define GREEN_LED_ON()   GPIOB->ODR |=  (1 << 12)
+#define GREEN_LED_OFF()  GPIOB->ODR &= ~(1 << 12)
+#define RED_LED_ON()     GPIOB->ODR |=  (1 << 13)
+#define RED_LED_OFF()    GPIOB->ODR &= ~(1 << 13)
+#define BLUE_LED_ON()    GPIOB->ODR |=  (1 << 14)
+#define BLUE_LED_OFF()   GPIOB->ODR &= ~(1 << 14)
+/*Configured TIM1 PWM registers for PA8 servo signal
+
+Implemented Servo_SetAngle subroutine for lock control
+
+Configured GPIO output pins for Status LEDs (PB12, PB13, PB14)
+
+Added inline definitions for individual LED state toggling*/
 
 /*AHMED BASEM ALARIQI*/
 
