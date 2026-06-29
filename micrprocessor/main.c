@@ -35,3 +35,6 @@ Added ADC_ToScale function to map values from 0-4095 to 0-10
 Implemented ReadPots subroutine to update active combo readings*/
 /* ───────────────────── Servo (TIM1 CH1, PA8) ───────────────────── */
 
+
+/*AHMED BASEM ALARIQI*/
+
