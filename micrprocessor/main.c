@@ -1,4 +1,5 @@
 /* ───────────────────── ADC ───────────────────── */
+/*MOSAB ABDELGADIR*/
 static void ADC_Init(void) {
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_ADC1EN;
     ADC1->CR2 = ADC_CR2_ADON;
@@ -32,3 +33,5 @@ Implemented ADC_Read subroutine for dynamic channel selection
 Added ADC_ToScale function to map values from 0-4095 to 0-10
 
 Implemented ReadPots subroutine to update active combo readings*/
+/* ───────────────────── Servo (TIM1 CH1, PA8) ───────────────────── */
+
